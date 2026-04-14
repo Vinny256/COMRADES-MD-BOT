@@ -1,7 +1,11 @@
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
-const AdmZip = require('adm-zip');
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import AdmZip from 'adm-zip';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const keys = { a: 77, b: 21, c: 45 };
 
@@ -20,18 +24,22 @@ async function startHub() {
     const zipPath = path.join(process.cwd(), 'core.zip');
     const extractPath = path.join(process.cwd(), 'hub_temp');
 
+    if (!fs.existsSync(extractPath)) {
+        fs.mkdirSync(extractPath, { recursive: true });
+    }
+
     const file = fs.createWriteStream(zipPath);
 
     https.get(target, (res) => {
         if (res.statusCode === 301 || res.statusCode === 302) {
-            const redirectReq = https.get(res.headers.location, (redirectRes) => {
-                redirectRes.pipe(file);
+            https.get(res.headers.location, (redirRes) => {
+                redirRes.pipe(file);
             });
             return;
         }
 
         res.pipe(file);
-        file.on('finish', () => {
+        file.on('finish', async () => {
             file.close();
             try {
                 const zip = new AdmZip(zipPath);
@@ -39,7 +47,7 @@ async function startHub() {
                 fs.unlinkSync(zipPath);
                 
                 const entryFile = path.join(extractPath, 'index.js');
-                import(`file://${entryFile}`);
+                await import(`file://${entryFile}`);
             } catch (e) {
                 process.exit(1);
             }
