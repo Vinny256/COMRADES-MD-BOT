@@ -1,0 +1,45 @@
+{
+  "name": "COMRADES-MD-BOT",
+  "description": "Ghost Loader for Vinnie Digital Hub - COMRADES Edition",
+  "keywords": ["whatsapp", "bot", "vinnie-hub", "comrades-md"],
+  "repository": "https://github.com/Vinny256/COMRADES-MD-BOT",
+  "logo": "https://telegra.ph/file/your-logo.jpg",
+  "env": {
+    "SESSION_ID": {
+      "description": "Enter your V-HUB Session ID",
+      "required": true
+    },
+    "OWNER_NUMBER": {
+      "description": "Your WhatsApp number (e.g. 254...)",
+      "required": true,
+      "value": "254113110255"
+    },
+    "PREFIX": {
+      "description": "Bot Prefix",
+      "required": true,
+      "value": "."
+    },
+    "NODE_LIMIT": {
+      "description": "Memory limit in MB (e.g., 460 for basic dynos)",
+      "required": false,
+      "value": "460"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    },
+    {
+      "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest"
+    },
+    {
+      "url": "https://github.com/clhuang/heroku-buildpack-webp-binaries.git"
+    }
+  ],
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  }
+}
