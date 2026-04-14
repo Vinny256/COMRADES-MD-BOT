@@ -4,26 +4,33 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-
 const vault_secret = "aHR0cHM6Ly93d3cuZHJvcGJveC5jb20vc2NsL2ZpL2JvZzB2aTBycGthOWU5YmFtNm45My92aHViX2NvcmUuemlwP3Jsa2V5PXRlNDYzYTNhZWc1bWpmc3RqYWt5aG1vNmImc3Q9ZXFlODJiczAmZGw9MQ==";
 
 const download = (url, dest) => {
     return new Promise((resolve, reject) => {
-        try {
-            https.get(new URL(url), (res) => {
-                if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                    return download(res.headers.location, dest).then(resolve).catch(reject);
-                }
-                if (res.statusCode !== 200) return reject(new Error(`Status ${res.statusCode}`));
-                const file = fs.createWriteStream(dest);
-                res.pipe(file);
-                file.on('finish', () => { file.close(); resolve(); });
-            }).on('error', reject);
-        } catch (e) { reject(e); }
+        https.get(new URL(url), (res) => {
+            if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                return download(res.headers.location, dest).then(resolve).catch(reject);
+            }
+            const file = fs.createWriteStream(dest);
+            res.pipe(file);
+            file.on('finish', () => { file.close(); resolve(); });
+        }).on('error', reject);
     });
+};
+
+// Helper to find index.js in any subfolder
+const findEntry = (dir) => {
+    const files = fs.readdirSync(dir);
+    if (files.includes('index.js')) return path.join(dir, 'index.js');
+    for (const file of files) {
+        const fullPath = path.join(dir, file);
+        if (fs.statSync(fullPath).isDirectory()) {
+            const found = findEntry(fullPath);
+            if (found) return found;
+        }
+    }
+    return null;
 };
 
 (async () => {
@@ -39,15 +46,13 @@ const download = (url, dest) => {
         await download(fullUrl, zipPath);
         
         console.log('[V-HUB] EXTRACTING...');
-        const zip = new AdmZip(zipPath);
-        zip.extractAllTo(extractPath, true);
+        new AdmZip(zipPath).extractAllTo(extractPath, true);
         fs.unlinkSync(zipPath);
         
-        let entryFile = path.join(extractPath, 'index.js');
-        const nested = path.join(extractPath, 'COMRADES-MD-main', 'index.js');
-        if (!fs.existsSync(entryFile) && fs.existsSync(nested)) entryFile = nested;
+        const entryFile = findEntry(extractPath);
+        if (!entryFile) throw new Error("Could not locate index.js inside ZIP");
 
-        console.log('[V-HUB] BOOTING COMRADES-MD...');
+        console.log(`[V-HUB] BOOTING FROM: ${entryFile}`);
         process.chdir(path.dirname(entryFile));
         await import(`file://${entryFile}`);
     } catch (e) {
