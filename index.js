@@ -45,14 +45,16 @@ async function startHub() {
         zip.extractAllTo(extractPath, true);
         fs.unlinkSync(zipPath);
         
-        // 🎯 THE PATH FIX: Check for the subfolder
         let entryFile = path.join(extractPath, 'index.js');
         const nestedFolder = path.join(extractPath, 'COMRADES-MD-main', 'index.js');
 
         if (!fs.existsSync(entryFile) && fs.existsSync(nestedFolder)) {
             entryFile = nestedFolder;
-            console.log('[V-HUB] DETECTED NESTED STRUCTURE');
         }
+
+        // 🚀 THE CRITICAL FIX: Change working directory to the extracted core
+        // This allows the bot to find './commands', './lib', and 'database'
+        process.chdir(path.dirname(entryFile));
 
         console.log('[V-HUB] BOOTING COMRADES-MD...');
         await import(`file://${entryFile}`);
