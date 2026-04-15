@@ -1,90 +1,109 @@
+import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
-import zlib from 'zlib';
-import fetch from 'node-fetch';
-
-const _0xDec = (_0xStr) => Buffer.from(_0xStr, 'base64').toString('utf-8');
-const _0xLg = (_0xM) => console.log(_0xDec('W0dIT1NULUxPQURFUl0g') + _0xDec(_0xM));
+import zlib from 'zlib'; 
+import fetch from 'node-fetch'; 
 
 
-const _0xVlt = "aHR0cHM6Ly93d3cuZHJvcGJveC5jb20vc2NsL2ZpL25jOGNjZ21ya3YzM2I2NmY5aHI2OS92aHViX2NvcmUuemlwP3Jsa2V5PXZudGc3aTZxbTVyZ3g2YXM0bnloY2Nmc2Mmc3Q9cGdpc3NkcHAmZGw9MQ==";
+const vault_secret = "aHR0cHM6Ly93d3cuZHJvcGJveC5jb20vc2NsL2ZpL25jOGNjZ21ya3YzM2I2NmY5aHI2OS92aHViX2NvcmUuemlwP3Jsa2V5PXZudGc3aTZxbTVyZ3g2YXM0bnloY2Nmc2Mmc3Q9cGdpc3NkcHAmZGw9MQ==";
 
-const _0xDl = async (_0xU, _0xD) => {
-    const _0xR = await fetch(_0xU, { headers: { 'User-Agent': _0xDec('TW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCk=') } });
-    if (!_0xR.ok) throw new Error(_0xR.statusText);
-    const _0xS = fs.createWriteStream(_0xD);
-    return new Promise((_0xRs, _0xRj) => { _0xR.body.pipe(_0xS); _0xR.body.on('error', _0xRj); _0xS.on('finish', () => { _0xS.close(); _0xRs(); }); });
+
+const download = async (url, dest) => {
+    const response = await fetch(url, { redirect: 'follow' });
+    if (!response.ok) throw new Error(`Download failed: ${response.statusText}`);
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    fs.writeFileSync(dest, buffer);
 };
 
-const _0xFnd = (_0xDr) => {
-    const _0xFls = fs.readdirSync(_0xDr);
-    const _0xTgt = _0xDec('aW5kZXguanM=');
-    if (_0xFls.includes(_0xTgt)) return path.join(_0xDr, _0xTgt);
-    for (const _0xF of _0xFls) {
-        const _0xP = path.join(_0xDr, _0xF);
-        if (fs.statSync(_0xP).isDirectory()) { const _0xFd = _0xFnd(_0xP); if (_0xFd) return _0xFd; }
+
+const findEntry = (dir) => {
+    const files = fs.readdirSync(dir);
+    if (files.includes('index.js')) return path.join(dir, 'index.js');
+    for (const file of files) {
+        const fullPath = path.join(dir, file);
+        if (fs.statSync(fullPath).isDirectory()) {
+            const found = findEntry(fullPath);
+            if (found) return found;
+        }
     }
     return null;
 };
 
 
-const _0xMnt = async (_0xSid, _0xFld) => {
-    if (!_0xSid) return;
-    let _0xRaw = "";
-    const _0xT1 = _0xDec('VklOTklFfg==');
-    const _0xT2 = _0xDec('VkhVQn4=');
+const mountSession = async (sessionId, targetFolder) => {
+    if (!sessionId) {
+        console.log("[V-HUB] ℹ️ No SESSION_ID found in environment. Proceeding...");
+        return;
+    }
 
-    if (_0xSid.startsWith(_0xT1)) {
-        _0xLg('8J+UkyBVbmxvY2tpbmcgTG9jYWwgU2Vzc2lvbiBTdHJpbmcuLi4=');
-        _0xRaw = _0xSid.split(_0xT1)[1];
-    } else if (_0xSid.startsWith(_0xT2)) {
-        _0xLg('4piB77iPIEZldGNoaW5nIFJlbW90ZSBWYXVsdCBLZXkuLi4=');
-        const _0xPid = _0xSid.split(_0xT2)[1];
+    let compressedData = "";
+
+    if (sessionId.startsWith("VINNIE~")) {
+        console.log("[V-HUB] 🔓 Unlocking Local Session String (Long ID)...");
+        compressedData = sessionId.split("VINNIE~")[1];
+    } 
+    else if (sessionId.startsWith("VHUB~")) {
+        console.log("[V-HUB] ☁️ Fetching Session from Paste.ee Vault (Short ID)...");
+        const pasteId = sessionId.split("VHUB~")[1];
+        
         try {
-            const _0xEp = _0xDec('aHR0cHM6Ly9hcGkucGFzdGUuZWUvdjEvcGFzdGVzLw==') + _0xPid;
-            const _0xRq = await fetch(_0xEp, { headers: { 'X-Auth-Token': _0xDec('YTZaTnowZUtrUEZsYndjeVBOdm04NlhVS3dISXBiOUU5ZDJwQnNMOHc=') } });
-            const _0xDt = await _0xRq.json();
-            if (!_0xDt.paste) throw new Error();
-            _0xRaw = _0xDt.paste.sections[0].contents;
-        } catch (e) { throw new Error('VAULT_DENIED'); }
-    } else return;
+            const res = await fetch(`https://api.paste.ee/v1/pastes/${pasteId}`, {
+                headers: { 'X-Auth-Token': 'a6ZNz0eKkPFlbwcyPNvm86XUKwHIpb9E9d2pBsL8w' }
+            });
+            const data = await res.json();
+            if (!data.paste) throw new Error("Paste not found");
+            compressedData = data.paste.sections[0].contents;
+        } catch (err) {
+            throw new Error("Failed to fetch session from Vault. Invalid Short ID.");
+        }
+    } 
+    else {
+        console.log("[V-HUB] ⚠️ Unknown Session format. Proceeding without auto-mount...");
+        return;
+    }
 
-    const _0xBf = Buffer.from(_0xRaw, 'base64');
-    const _0xCr = zlib.inflateSync(_0xBf).toString('utf-8');
-    const _0xSd = path.join(_0xFld, _0xDec('c2Vzc2lvbg=='));
-    if (!fs.existsSync(_0xSd)) fs.mkdirSync(_0xSd, { recursive: true });
-    fs.writeFileSync(path.join(_0xSd, _0xDec('Y3JlZHMuanNvbg==')), _0xCr);
-    _0xLg('4pyFIEdob3N0Q29yZSBBdXRoZW50aWNhdGVk');
+    
+    const credsBuffer = Buffer.from(compressedData, 'base64');
+    const credsJson = zlib.inflateSync(credsBuffer).toString('utf-8');
+    
+    const sessionPath = path.join(targetFolder, 'session');
+    if (!fs.existsSync(sessionPath)) fs.mkdirSync(sessionPath, { recursive: true });
+    
+    fs.writeFileSync(path.join(sessionPath, 'creds.json'), credsJson);
+    console.log("[V-HUB] ✅ GhostCore Session Mounted Successfully!");
 };
 
-
 (async () => {
-    _0xLg('U1lTVEVNIEJPT1RJTkcuLi4=');
+    console.log('[V-HUB] SYSTEM STARTING...');
     try {
-        const _0xU = _0xDec(_0xVlt);
-        const _0xZp = path.join(process.cwd(), _0xDec('Y29yZS56aXA='));
-        const _0xXp = path.join(process.cwd(), _0xDec('aHViX3RlbXA='));
+        const fullUrl = Buffer.from(vault_secret, 'base64').toString('utf-8');
+        const zipPath = path.join(process.cwd(), 'core.zip');
+        const extractPath = path.join(process.cwd(), 'hub_temp');
 
-        if (!fs.existsSync(_0xXp)) fs.mkdirSync(_0xXp, { recursive: true });
-        
-        _0xLg('RVhUUkFDVElORyBQQVlMT0FELi4u');
-        await _0xDl(_0xU, _0xZp);
-        new AdmZip(_0xZp).extractAllTo(_0xXp, true);
-        fs.unlinkSync(_0xZp);
-        
-        const _0xEnt = _0xFnd(_0xXp);
-        if (!_0xEnt) throw new Error('MISSING_CORE');
+        if (!fs.existsSync(extractPath)) fs.mkdirSync(extractPath, { recursive: true });
 
-        process.chdir(path.dirname(_0xEnt));
+        console.log('[V-HUB] FETCHING CORE...');
+        await download(fullUrl, zipPath);
         
-        await _0xMnt(process.env.SESSION_ID, process.cwd());
+        console.log('[V-HUB] EXTRACTING...');
+        new AdmZip(zipPath).extractAllTo(extractPath, true);
+        fs.unlinkSync(zipPath);
         
-        _0xLg('SU5JVElBVElORyBJTlRFUkZBQ0UuLi4=');
-        await import(`file://${_0xEnt}`);
+        const entryFile = findEntry(extractPath);
+        if (!entryFile) throw new Error("Could not locate index.js inside ZIP");
+
+        console.log(`[V-HUB] BOOTING FROM: ${entryFile}`);
+        process.chdir(path.dirname(entryFile));
+
+        
+        await mountSession(process.env.SESSION_ID, process.cwd());
+
+        await import(`file://${entryFile}`);
     } catch (e) {
-        console.error(_0xDec('W0ZBVEFMXSA=') + e.message);
+        console.error('[V-HUB] FATAL ERROR:', e.message);
         process.exit(1);
     }
 })();
