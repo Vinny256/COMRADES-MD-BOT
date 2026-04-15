@@ -10,6 +10,5 @@ services:
         sync: false
       - key: PREFIX
         value: "."
-        sync: false
       - key: OWNER_NUMBER
         sync: false
