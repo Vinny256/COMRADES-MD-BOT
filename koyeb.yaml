@@ -1,0 +1,14 @@
+services:
+  - name: comrades-md-bot
+    regions:
+      - fra
+    ports:
+      - port: 8080
+        protocol: http
+    env:
+      - key: SESSION_ID
+        value: "PASTE_YOUR_SESSION_ID_HERE"
+      - key: PREFIX
+        value: "."
+      - key: OWNER_NUMBER
+        value: "PASTE_OWNER_NUMBER_HERE"
