@@ -26,6 +26,7 @@
     "qs": "^6.11.2",
     "skia-canvas": "latest",
     "wa-sticker-formatter": "^4.4.4",
+    "youtube-yts": "latest",
     "yt-search": "^2.11.0"
   },
   "engines": {
