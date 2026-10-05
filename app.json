@@ -23,6 +23,39 @@
       "description": "Memory limit in MB (e.g., 460 for basic dynos)",
       "required": false,
       "value": "460"
+    },
+    "MODE": {
+      "description": "Default bot operational mode (public or private)",
+      "required": false,
+      "value": "public"
+    },
+    "CHANGELOG_URL": {
+      "description": "Link to the remote changelog JSON for the .update command",
+      "required": true,
+      "value": "https://gist.githubusercontent.com/ilovekego/301acc758d2b68b6cc981b67662e289d/raw/d776125a72dc5887fdf2c184a05ad8168dc2ec85/changelog.json"
+    },
+    "HEROKU_APP_NAME": {
+      "description": "Heroku application name required for dyno restart command",
+      "required": false
+    },
+    "HEROKU_API_KEY": {
+      "description": "Heroku API key required for self-restarting updates",
+      "required": false
+    },
+    "AUTOBIO": {
+      "description": "Enable automatic hourly profile bio rotation",
+      "required": false,
+      "value": "true"
+    },
+    "ANTILINK": {
+      "description": "Enable global link protection filter",
+      "required": false,
+      "value": "false"
+    },
+    "ANTIMENTION": {
+      "description": "Enable protection against group mentions in statuses",
+      "required": false,
+      "value": "false"
     }
   },
   "buildpacks": [
